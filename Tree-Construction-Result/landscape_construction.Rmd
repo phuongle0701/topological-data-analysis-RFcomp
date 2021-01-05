@@ -21,7 +21,24 @@ library("jsonlite")
 library(gtools)
 ```
 
+# Diagrams H0 order: 
 
+```{r, message=FALSE, warning=FALSE}
+path = paste(getwd(),"/H0", sep ="")
+setwd(path)
+files_list = mixedsort(list.files(path, pattern = '.txt')) ## sorting the text files 
+print(files_list)
+
+## storing the data in the list
+datasH0 = list()
+for (i in seq_along(files_list)){
+  file = files_list[i]
+  data = read.table(file, sep = ",")
+  dimvalue = replicate(nrow(data), 0) # all order 0's
+  data = cbind(dimvalue, data)
+  datasH0[[i]] = data
+}
+```
 
 
 # Diagrams H1 order: 
@@ -33,28 +50,43 @@ files_list = mixedsort(list.files(path, pattern = '.txt')) ## sorting the text f
 print(files_list)
 
 ## storing the data in the list
-datas = list()
+datasH1 = list()
 for (i in seq_along(files_list)){
   file = files_list[i]
   data = read.table(file, sep = ",")
-  dimvalue = replicate(nrow(data), 1)
+  dimvalue = replicate(nrow(data), 1) # all dimension order 1's
   data = cbind(dimvalue, data)
-  matrixFile = as.matrix(data)
-  colnames(matrixFile) = c("dimension","Birth", "Death")
-  datas[[i]] = matrixFile
+  datasH1[[i]] = data
 }
 ```
 
 
-# Persistent Landscape: for H1. 
+# Combining them together into Diagrams: 
+
+```{r}
+datas = list()
+colvals = c("dimension", "Birth", "Death")
+for (i in seq_along(1:38)){
+  first = datasH0[[i]]
+  second = datasH1[[i]]
+  datafile = rbind(first,second)
+  matFile = as.matrix(datafile)
+  colnames(matFile) = colvals
+  datas[[i]] = matFile
+}
+```
+
+# Persistent Landscape: 
 
 
 ```{r}
 computeLandScape = function(datas){
     n = length(datas)
     Landscapes = list()
+    maxscale = 5
     for (i in seq_along((1:38))){
       data = datas[[i]]
+      tseq = seq(0,maxscale, length = 1000)
       value = landscape(data, dimension = 1, KK = 1)
       Landscapes[[i]] = value
     }
@@ -67,7 +99,11 @@ computeLandScape = function(datas){
 # Computing: 
 
 ```{r}
-landscapes = computeLandScape(datas)
+#landscapes = computeLandScape(datas)
+DiagLim = datas[[1]]
+
+
+landscape(DiagLim, dimension = 1, KK = 1, tseq = tseq)
 ```
 
 
